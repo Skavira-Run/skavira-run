@@ -192,8 +192,8 @@ export default function SkaviraApp() {
   const primaryBtn = "font-medium text-[17px] px-8 py-[14px] rounded-xl bg-[#2a7a3e] text-white border border-transparent transition-all hover:bg-[#226630] hover:-translate-y-px active:translate-y-0 active:bg-[#1d5727] cursor-pointer";
 
   const videoSrc: Record<Screen, string> = {
-    home:    'https://videos.pexels.com/video-files/5387243/5387243-hd_1280_720_30fps.mp4',
-    record:  'https://videos.pexels.com/video-files/3209011/3209011-hd_1280_720_25fps.mp4',
+    home:    'https://videos.pexels.com/video-files/3209011/3209011-hd_1280_720_25fps.mp4',
+    record:  'https://videos.pexels.com/video-files/5387243/5387243-hd_1280_720_30fps.mp4',
     gallery: 'https://videos.pexels.com/video-files/6056826/6056826-hd_1280_720_30fps.mp4',
     journey: 'https://videos.pexels.com/video-files/11515017/11515017-hd_1280_720_30fps.mp4',
   };
