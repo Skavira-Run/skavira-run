@@ -200,15 +200,19 @@ export default function SkaviraApp() {
 
   return (
     <div className="min-h-screen flex items-center justify-center overflow-hidden relative">
-      {/* Фон-заглушка пока видео не загрузилось */}
+      {/* Экран загрузки — плавно исчезает когда видео готово */}
       <div
-        className="fixed inset-0 transition-opacity duration-1000"
+        className="fixed inset-0 z-50 flex flex-col items-center justify-center transition-opacity duration-1000"
         style={{
           background: 'linear-gradient(135deg, #1a2e1e 0%, #0d1a10 100%)',
           opacity: videoReady ? 0 : 1,
-          pointerEvents: 'none',
+          pointerEvents: videoReady ? 'none' : 'all',
         }}
-      />
+      >
+        <p className="loading-pulse text-[13px] font-medium tracking-[0.2em] uppercase text-white/70">
+          SKAVIRA Run
+        </p>
+      </div>
       {/* Все 4 видео всегда в DOM — грузятся в фоне, показывается только активное */}
       {(Object.keys(videoSrc) as Screen[]).map((s, i) => (
         <video
