@@ -114,6 +114,7 @@ export default function SkaviraApp() {
   const [text, setText] = useState('');
   const [textExpanded, setTextExpanded] = useState(false);
   const [afterError, setAfterError] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
 
   useEffect(() => {
     const rawEntries = localStorage.getItem(STORAGE_KEY);
@@ -199,8 +200,17 @@ export default function SkaviraApp() {
 
   return (
     <div className="min-h-screen flex items-center justify-center overflow-hidden relative">
+      {/* Фон-заглушка пока видео не загрузилось */}
+      <div
+        className="fixed inset-0 transition-opacity duration-1000"
+        style={{
+          background: 'linear-gradient(135deg, #1a2e1e 0%, #0d1a10 100%)',
+          opacity: videoReady ? 0 : 1,
+          pointerEvents: 'none',
+        }}
+      />
       {/* Все 4 видео всегда в DOM — грузятся в фоне, показывается только активное */}
-      {(Object.keys(videoSrc) as Screen[]).map((s) => (
+      {(Object.keys(videoSrc) as Screen[]).map((s, i) => (
         <video
           key={s}
           autoPlay
@@ -208,6 +218,7 @@ export default function SkaviraApp() {
           loop
           playsInline
           preload="auto"
+          onCanPlay={() => { if (i === 0) setVideoReady(true); }}
           className="fixed inset-0 w-full h-full object-cover transition-opacity duration-700"
           style={{ opacity: s === screen ? 1 : 0 }}
         >
