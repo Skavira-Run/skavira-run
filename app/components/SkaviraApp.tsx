@@ -199,18 +199,21 @@ export default function SkaviraApp() {
 
   return (
     <div className="min-h-screen flex items-center justify-center overflow-hidden relative">
-      {/* Фоновое видео — меняется при смене экрана */}
-      <video
-        key={screen}
-        autoPlay
-        muted
-        loop
-        playsInline
-        className="fixed inset-0 w-full h-full object-cover"
-        style={{ animation: 'fadeIn 1s ease-out' }}
-      >
-        <source src={videoSrc[screen]} type="video/mp4" />
-      </video>
+      {/* Все 4 видео всегда в DOM — грузятся в фоне, показывается только активное */}
+      {(Object.keys(videoSrc) as Screen[]).map((s) => (
+        <video
+          key={s}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          className="fixed inset-0 w-full h-full object-cover transition-opacity duration-700"
+          style={{ opacity: s === screen ? 1 : 0 }}
+        >
+          <source src={videoSrc[s]} type="video/mp4" />
+        </video>
+      ))}
       {/* Тёмный оверлей — чтобы текст читался поверх видео */}
       <div className="fixed inset-0 bg-black/40" />
       <main className="w-full max-w-[640px] px-6 py-12 text-center relative z-10">
