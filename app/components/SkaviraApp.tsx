@@ -236,7 +236,7 @@ export default function SkaviraApp() {
         {/* Главный экран */}
         {screen === 'home' && (
           <div className="screen-enter">
-            <p className="text-[13px] font-medium tracking-[0.12em] uppercase text-white/60 mb-16">
+            <p className="text-[15px] font-medium tracking-[0.16em] uppercase text-white/70 mb-16">
               SKAVIRA Run
             </p>
 
@@ -271,7 +271,7 @@ export default function SkaviraApp() {
         {/* Экран записи */}
         {screen === 'record' && (
           <div className="screen-enter text-left">
-            <p className="text-[13px] font-medium tracking-[0.12em] uppercase text-white/60 mb-12 text-center">
+            <p className="text-[15px] font-medium tracking-[0.16em] uppercase text-white/70 mb-12 text-center">
               SKAVIRA Run
             </p>
 
@@ -331,7 +331,7 @@ export default function SkaviraApp() {
         {/* Экран галереи */}
         {screen === 'gallery' && (
           <div className="screen-enter">
-            <p className="text-[13px] font-medium tracking-[0.12em] uppercase text-white/60 mb-12">
+            <p className="text-[15px] font-medium tracking-[0.16em] uppercase text-white/70 mb-12">
               SKAVIRA Run
             </p>
             <h1 className="text-[42px] font-semibold leading-tight text-white mb-14">
@@ -352,7 +352,7 @@ export default function SkaviraApp() {
                       {entry.wordsBefore.length > 0 && (
                         <div className="flex flex-wrap gap-1.5">
                           {entry.wordsBefore.map((w) => (
-                            <span key={w} className="text-[13px] font-medium px-2.5 py-1 rounded-full bg-[#eeeee8] text-white/70">{w}</span>
+                            <span key={w} className="text-[13px] font-medium px-2.5 py-1 rounded-full bg-white/20 text-white border border-white/30">{w}</span>
                           ))}
                         </div>
                       )}
@@ -384,7 +384,7 @@ export default function SkaviraApp() {
         {/* Экран «Мой путь» */}
         {screen === 'journey' && (
           <div className="screen-enter">
-            <p className="text-[13px] font-medium tracking-[0.12em] uppercase text-white/60 mb-12">
+            <p className="text-[15px] font-medium tracking-[0.16em] uppercase text-white/70 mb-12">
               SKAVIRA Run
             </p>
             <h1 className="text-[42px] font-semibold leading-tight text-white mb-14">
@@ -415,10 +415,10 @@ export default function SkaviraApp() {
                 {/* Блок 2 — паттерн трансформации */}
                 {mostFreqBefore && mostFreqAfter && (
                   <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-6 py-5">
-                    <p className="text-[12px] font-medium tracking-[0.08em] uppercase text-white/60 mb-2">Твой паттерн</p>
+                    <p className="text-[12px] font-medium tracking-[0.08em] uppercase text-white/60 mb-2">Твои ощущения</p>
                     <p className="text-[17px] text-white">
                       Чаще всего выходишь{' '}
-                      <span className="font-semibold bg-[#eeeee8] text-white/70 px-2 py-0.5 rounded-full">{mostFreqBefore}</span>
+                      <span className="font-semibold bg-white/20 text-white border border-white/30 px-2 py-0.5 rounded-full">{mostFreqBefore}</span>
                       {' '}— и возвращаешься{' '}
                       <span className="font-semibold bg-[#d4e8db] text-[#1d5727] px-2 py-0.5 rounded-full">{mostFreqAfter}</span>.
                     </p>
@@ -450,7 +450,7 @@ export default function SkaviraApp() {
                           {entry.wordsBefore.length > 0 && (
                             <div className="flex flex-wrap gap-1.5">
                               {entry.wordsBefore.map((w) => (
-                                <span key={w} className="text-[13px] font-medium px-2.5 py-1 rounded-full bg-[#eeeee8] text-white/70">{w}</span>
+                                <span key={w} className="text-[13px] font-medium px-2.5 py-1 rounded-full bg-white/20 text-white border border-white/30">{w}</span>
                               ))}
                             </div>
                           )}
