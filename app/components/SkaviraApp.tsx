@@ -5,6 +5,7 @@ import WordPicker from './WordPicker';
 
 const STORAGE_KEY = 'skavira-run-v2-entries';
 const CUSTOM_WORDS_KEY = 'skavira-run-v2-custom-words';
+const REST_STORAGE_KEY = 'skavira-run-v2-rests';
 
 const FIXED_WORDS = [
   'тяжело', 'легко', 'злюсь', 'спокойно', 'сила',
@@ -12,7 +13,7 @@ const FIXED_WORDS = [
   'тревога', 'ясность', 'в потоке', 'напряжён', 'свободно',
 ];
 
-type Screen = 'home' | 'record' | 'gallery' | 'journey';
+type Screen = 'home' | 'record' | 'journey' | 'rest';
 
 interface Entry {
   id: string;
@@ -20,6 +21,11 @@ interface Entry {
   wordsBefore: string[];
   wordsAfter: string[];
   text: string;
+}
+
+interface Rest {
+  id: string;
+  date: string;
 }
 
 // Взвешенная частота: чем свежее использование — тем выше вес.
@@ -108,6 +114,7 @@ export default function SkaviraApp() {
   const [screen, setScreen] = useState<Screen>('home');
   const [entries, setEntries] = useState<Entry[]>([]);
   const [customWords, setCustomWords] = useState<string[]>([]);
+  const [rests, setRests] = useState<Rest[]>([]);
 
   const [selectedBefore, setSelectedBefore] = useState<string[]>([]);
   const [selectedAfter, setSelectedAfter] = useState<string[]>([]);
@@ -115,12 +122,15 @@ export default function SkaviraApp() {
   const [textExpanded, setTextExpanded] = useState(false);
   const [afterError, setAfterError] = useState(false);
   const [videoReady, setVideoReady] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
 
   useEffect(() => {
     const rawEntries = localStorage.getItem(STORAGE_KEY);
     const rawWords = localStorage.getItem(CUSTOM_WORDS_KEY);
+    const rawRests = localStorage.getItem(REST_STORAGE_KEY);
     if (rawEntries) setEntries(JSON.parse(rawEntries));
     if (rawWords) setCustomWords(JSON.parse(rawWords));
+    if (rawRests) setRests(JSON.parse(rawRests));
   }, []);
 
   function navigateTo(target: Screen) {
@@ -130,6 +140,9 @@ export default function SkaviraApp() {
       setText('');
       setTextExpanded(false);
       setAfterError(false);
+    }
+    if (target !== 'home') {
+      setJustSaved(false);
     }
     setScreen(target);
   }
@@ -156,6 +169,23 @@ export default function SkaviraApp() {
     }
   }
 
+  function handleRest() {
+    const todayStr = new Date().toDateString();
+    const alreadyLoggedToday = rests.some(
+      (r) => new Date(r.date).toDateString() === todayStr
+    );
+    if (!alreadyLoggedToday) {
+      const rest: Rest = {
+        id: Date.now().toString(),
+        date: new Date().toISOString(),
+      };
+      const updated = [...rests, rest];
+      setRests(updated);
+      localStorage.setItem(REST_STORAGE_KEY, JSON.stringify(updated));
+    }
+    navigateTo('rest');
+  }
+
   function handleSave() {
     if (selectedAfter.length === 0) {
       setAfterError(true);
@@ -175,6 +205,8 @@ export default function SkaviraApp() {
     setEntries(updated);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
     navigateTo('home');
+    setJustSaved(true);
+    setTimeout(() => setJustSaved(false), 4000);
   }
 
   const sortedWords = getSortedWords(entries, customWords);
@@ -185,7 +217,10 @@ export default function SkaviraApp() {
   const mostFreqBefore = topWord(allWordsBefore);
   const mostFreqAfter = topWord(allWordsAfter);
   const topAfterWords = topWords(allWordsAfter, 5);
+  const topWordsAfter3 = topAfterWords.slice(0, 3);
   const contrastEntries = topContrastEntries(entries, 3);
+  const contrastIds = new Set(contrastEntries.map((e) => e.id));
+  const chronologicalEntries = [...entries].reverse().filter((e) => !contrastIds.has(e.id));
   const firstEntry = entries[0];
 
   const secondaryBtn = "font-medium text-[17px] px-8 py-[14px] rounded-xl bg-white/15 text-white border border-white/30 backdrop-blur-sm transition-all hover:bg-white/25 hover:-translate-y-px active:translate-y-0 cursor-pointer";
@@ -194,7 +229,7 @@ export default function SkaviraApp() {
   const videoSrc: Record<Screen, string> = {
     home:    'https://videos.pexels.com/video-files/3209011/3209011-hd_1280_720_25fps.mp4',
     record:  'https://videos.pexels.com/video-files/5387243/5387243-hd_1280_720_30fps.mp4',
-    gallery: 'https://videos.pexels.com/video-files/11515017/11515017-hd_1280_720_30fps.mp4',
+    rest:    'https://videos.pexels.com/video-files/11515017/11515017-hd_1280_720_30fps.mp4',
     journey: 'https://videos.pexels.com/video-files/6056826/6056826-hd_1280_720_30fps.mp4',
   };
 
@@ -245,8 +280,8 @@ export default function SkaviraApp() {
               <div className="text-[96px] font-semibold leading-none text-white mb-4">
                 {entries.length}
               </div>
-              <p className="text-[17px] text-white/60">
-                {getCounterPhrase(entries.length)}
+              <p className="text-[17px] text-white/60 transition-opacity duration-500">
+                {justSaved ? 'С возвращением.' : getCounterPhrase(entries.length)}
               </p>
             </div>
 
@@ -258,7 +293,7 @@ export default function SkaviraApp() {
               <button onClick={() => navigateTo('record')} className={primaryBtn}>
                 Да
               </button>
-              <button onClick={() => navigateTo('gallery')} className={secondaryBtn}>
+              <button onClick={handleRest} className={secondaryBtn}>
                 Ещё нет
               </button>
               <button onClick={() => navigateTo('journey')} className={secondaryBtn}>
@@ -328,55 +363,48 @@ export default function SkaviraApp() {
           </div>
         )}
 
-        {/* Экран галереи */}
-        {screen === 'gallery' && (
+        {/* Экран «Ещё нет» — зеркало в моменте бездействия */}
+        {screen === 'rest' && (
           <div className="screen-enter">
-            <p className="text-[15px] font-medium tracking-[0.16em] uppercase text-white/70 mb-12">
+            <p className="text-[15px] font-medium tracking-[0.16em] uppercase text-white/70 mb-16">
               SKAVIRA Run
             </p>
-            <h1 className="text-[42px] font-semibold leading-tight text-white mb-14">
-              Все твои возвращения
-            </h1>
 
-            <div className="text-left mb-10">
-              {entries.length === 0 ? (
-                <div className="py-10 text-center">
-                  <p className="text-[22px] font-semibold text-white/70 mb-2">Пока ни одной версии</p>
-                  <p className="text-[15px] text-white/50">Первая — впереди.</p>
-                </div>
+            <div className="mb-14">
+              {topWordsAfter3.length === 0 ? (
+                <>
+                  <h2 className="text-[32px] font-semibold leading-[1.2] text-white mb-6">
+                    Вспомни своё состояние без бега.
+                  </h2>
+                  <p className="text-[19px] leading-[1.5] text-white/75">
+                    Запомни его. Сделай шаг — и увидишь, каким ты станешь после возвращения.
+                  </p>
+                </>
               ) : (
-                [...entries].reverse().map((entry) => (
-                  <div key={entry.id} className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-6 py-5 mb-4">
-                    <p className="text-[13px] text-white/60 tracking-[0.03em] mb-3">{formatDate(entry.date)}</p>
-                    <div className="flex items-center flex-wrap gap-2 mb-1">
-                      {entry.wordsBefore.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5">
-                          {entry.wordsBefore.map((w) => (
-                            <span key={w} className="text-[13px] font-medium px-2.5 py-1 rounded-full bg-white/20 text-white border border-white/30">{w}</span>
-                          ))}
-                        </div>
-                      )}
-                      {entry.wordsBefore.length > 0 && entry.wordsAfter.length > 0 && (
-                        <span className="text-[#b0b0a8] text-[15px]">→</span>
-                      )}
-                      {entry.wordsAfter.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5">
-                          {entry.wordsAfter.map((w) => (
-                            <span key={w} className="text-[13px] font-medium px-2.5 py-1 rounded-full bg-[#d4e8db] text-[#1d5727]">{w}</span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    {entry.text && (
-                      <p className="text-[15px] leading-[1.55] text-white/70 mt-2.5 whitespace-pre-wrap">{entry.text}</p>
-                    )}
-                  </div>
-                ))
+                <>
+                  <h2 className="text-[28px] font-semibold leading-[1.3] text-white mb-6">
+                    Твои самые частые возвращения —{' '}
+                    {topWordsAfter3.map((w, i) => (
+                      <span key={w}>
+                        <em className="not-italic text-[#d4e8db] font-semibold">{w}</em>
+                        {i < topWordsAfter3.length - 1 ? ', ' : '.'}
+                      </span>
+                    ))}
+                  </h2>
+                  <p className="text-[19px] leading-[1.5] text-white/75">
+                    Ты и сейчас такой? Или шаг всё изменит?
+                  </p>
+                </>
               )}
             </div>
 
-            <div className="flex gap-4 justify-center">
-              <button onClick={() => navigateTo('home')} className={secondaryBtn}>Назад</button>
+            <div className="flex gap-4 justify-center flex-wrap">
+              <button onClick={() => navigateTo('record')} className={primaryBtn}>
+                Бежать сейчас
+              </button>
+              <button onClick={() => navigateTo('home')} className={secondaryBtn}>
+                Назад
+              </button>
             </div>
           </div>
         )}
@@ -392,9 +420,28 @@ export default function SkaviraApp() {
             </h1>
 
             {entries.length === 0 ? (
-              <div className="py-10 text-center mb-10">
-                <p className="text-[22px] font-semibold text-white/70 mb-2">Ещё нет истории</p>
-                <p className="text-[15px] text-white/50">Сделай первое возвращение — и здесь появится твой путь.</p>
+              <div className="text-left mb-10">
+                <p className="text-[22px] font-semibold text-white/80 mb-3 text-center">Первое возвращение впереди</p>
+                <p className="text-[15px] text-white/60 mb-8 text-center">
+                  После нескольких возвращений здесь появятся твои паттерны — и история всех пробежек.
+                </p>
+                <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl px-6 py-5 mb-3">
+                  <p className="text-[12px] font-medium tracking-[0.08em] uppercase text-white/40 mb-2">Пример</p>
+                  <p className="text-[17px] text-white/50">
+                    Чаще всего выходишь{' '}
+                    <span className="font-semibold bg-white/10 text-white/60 border border-white/20 px-2 py-0.5 rounded-full">усталым</span>
+                    {' '}— и возвращаешься{' '}
+                    <span className="font-semibold bg-[#d4e8db]/30 text-[#1d5727]/70 px-2 py-0.5 rounded-full">свободным</span>.
+                  </p>
+                </div>
+                <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl px-6 py-5">
+                  <p className="text-[13px] text-white/40 tracking-[0.03em] mb-3">когда-нибудь, утро</p>
+                  <div className="flex items-center flex-wrap gap-2">
+                    <span className="text-[13px] font-medium px-2.5 py-1 rounded-full bg-white/10 text-white/60 border border-white/20">тревога</span>
+                    <span className="text-[#b0b0a8]/60 text-[15px]">→</span>
+                    <span className="text-[13px] font-medium px-2.5 py-1 rounded-full bg-[#d4e8db]/30 text-[#1d5727]/70">ясность</span>
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="text-left space-y-6 mb-12">
@@ -465,6 +512,40 @@ export default function SkaviraApp() {
                         </div>
                         {entry.text && (
                           <p className="text-[15px] leading-[1.55] text-white/70 mt-3 whitespace-pre-wrap">{entry.text}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Блок 5 — хронология остальных возвращений */}
+                {chronologicalEntries.length > 0 && (
+                  <div>
+                    <p className="text-[12px] font-medium tracking-[0.08em] uppercase text-white/60 mb-3 px-1">Хронология</p>
+                    {chronologicalEntries.map((entry) => (
+                      <div key={entry.id} className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-6 py-5 mb-3">
+                        <p className="text-[13px] text-white/60 tracking-[0.03em] mb-3">{formatDate(entry.date)}</p>
+                        <div className="flex items-center flex-wrap gap-2 mb-1">
+                          {entry.wordsBefore.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5">
+                              {entry.wordsBefore.map((w) => (
+                                <span key={w} className="text-[13px] font-medium px-2.5 py-1 rounded-full bg-white/20 text-white border border-white/30">{w}</span>
+                              ))}
+                            </div>
+                          )}
+                          {entry.wordsBefore.length > 0 && entry.wordsAfter.length > 0 && (
+                            <span className="text-[#b0b0a8] text-[15px]">→</span>
+                          )}
+                          {entry.wordsAfter.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5">
+                              {entry.wordsAfter.map((w) => (
+                                <span key={w} className="text-[13px] font-medium px-2.5 py-1 rounded-full bg-[#d4e8db] text-[#1d5727]">{w}</span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        {entry.text && (
+                          <p className="text-[15px] leading-[1.55] text-white/70 mt-2.5 whitespace-pre-wrap">{entry.text}</p>
                         )}
                       </div>
                     ))}
